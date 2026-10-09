@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>To You, Secretly.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-cream: #fffaf6;
+            --bg-card: #ffffff;
+            --pink-soft: #fde8e8;
+            --pink-main: #f4b6c2;
+            --pink-accent: #e88a99;
+            --rose-deep: #d96b81;
+            --gold-champagne: #dfb15b;
+            --text-main: #5a4b4c;
+            --text-light: #8c7b7d;
+            --shadow-soft: 0 10px 30px rgba(217, 107, 129, 0.12);
+            --shadow-card: 0 15px 35px rgba(0, 0, 0, 0.05);
+            --radius-main: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Zen Maru Gothic', 'Noto Serif TC', serif;
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 背景飄浮裝飾 */
+        .bg-decorations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-element {
+            position: absolute;
+            opacity: 0.6;
+            animation: float 8s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        /* 容器與章節切換 */
+        .app-container {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            height: -webkit-fill-available;
+            max-height: 900px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 0;
+            position: relative;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @media (min-width: 500px) {
+            .app-container {
+                border-radius: 36px;
+                height: 92vh;
+                border: 1px solid rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.96);
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        .scene.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 2;
+        }
+
+        /* 標題風格 */
+        .en-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            color: var(--rose-deep);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .sub-title {
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            color: var(--text-light);
+            margin-bottom: 24px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* 按鈕樣式 */
+        .btn-romantic {
+            background: linear-gradient(135deg, var(--pink-main), var(--pink-accent));
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(232, 138, 153, 0.35);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-top: 16px;
+        }
+
+        .btn-romantic:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 10px rgba(232, 138, 153, 0.2);
+        }
+
+        /* 第一幕：信封 */
+        .envelope-wrapper {
+            perspective: 1000px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        .envelope {
+            width: 260px;
+            height: 180px;
+            background: #fbf0f2;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--pink-soft);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.6s ease;
+        }
+
+        .envelope-ribbon {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 100%;
+            background: rgba(244, 182, 194, 0.3);
+            border-left: 1px dashed var(--pink-accent);
+            border-right: 1px dashed var(--pink-accent);
+        }
+
+        .envelope-text-en {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.9rem;
+            color: var(--rose-deep);
+            z-index: 1;
+            margin-bottom: 8px;
+        }
+
+        .envelope-text-cn {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            z-index: 1;
+            line-height: 1.4;
+        }
+
+        /* 第二幕：密碼 */
+        .pass-input-box {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .pass-digit {
+            width: 50px;
+            height: 60px;
+            border-radius: 12px;
+            border: 2px solid var(--pink-soft);
+            background: white;
+            text-align: center;
+            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            color: var(--rose-deep);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+
+        .pass-digit:focus {
+            outline: none;
+            border-color: var(--pink-accent);
+            box-shadow: 0 0 10px rgba(244, 182, 194, 0.4);
+        }
+
+        .error-msg {
+            color: var(--rose-deep);
+            font-size: 0.85rem;
+            height: 20px;
+            margin-top: 8px;
+            transition: opacity 0.3s;
+        }
+
+        .security-notice {
+            font-size: 0.7rem;
+            color: #b0a0a2;
+            margin-top: 30px;
+            text-align: center;
+            padding: 0 20px;
+            line-height: 1.4;
+        }
+
+        /* 第三幕：About You 拍立得 */
+        .polaroid-card {
+            background: white;
+            padding: 20px 20px 30px 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-card);
+            width: 100%;
+            max-width: 300px;
+            margin: 10px 0;
+            border: 1px solid #f3e8e9;
+            perspective: 1000px;
+            cursor: pointer;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .polaroid-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--rose-deep);
+            font-size: 0.9rem;
+            text-align: center;
+            line-height: 1.6;
+            background: #fffafb;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .card-tag {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--gold-champagne);
+            margin-bottom: 8px;
+        }
+
+        .card-body {
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .card-hint {
+            font-size: 0.7rem;
+            color: var(--pink-accent);
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        /* 第四幕：Our Little Moments 日記 */
+        .diary-container {
+            width: 100%;
+            background: #fffafb;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid var(--pink-soft);
+            box-shadow: var(--shadow-card);
+            position: relative;
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .diary-date {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.85rem;
+            color: var(--gold-champagne);
+            border-bottom: 1px dashed var(--pink-soft);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        .diary-page {
+            display: none;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .diary-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .diary-text {
+            font-size: 0.88rem;
+            line-height: 1.8;
+            color: var(--text-main);
+            white-space: pre-line;
+        }
+
+        .diary-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--pink-soft);
+        }
+
+        .diary-btn {
+            background: none;
+            border: none;
+            color: var(--rose-deep);
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 6px 12px;
+        }
+
+        /* 第五幕：遊戲 */
+        .quiz-option {
+            width: 100%;
+            background: white;
+            border: 1px solid var(--pink-soft);
+            padding: 14px;
+            border-radius: 16px;
+            margin: 8px 0;
+            text-align: left;
+            font-size: 0.88rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-option:active {
+            background: var(--pink-soft);
+        }
+
+        .quiz-reply {
+            margin-top: 16px;
+            padding: 14px;
+            background: #fff5f7;
+            border-radius: 12px;
+            color: var(--rose-deep);
+            font-size: 0.88rem;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* 第六幕：彩蛋 */
+        .easter-egg-area {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            border: 1px dashed var(--pink-main);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hidden-heart {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            font-size: 1rem;
+            color: var(--pink-main);
+            cursor: pointer;
+            opacity: 0.4;
+            padding: 10px;
+            transition: opacity 0.3s;
+        }
+
+        .egg-card {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-card);
+            text-align: center;
+            animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 85%;
+        }
+
+        @keyframes popUp {
+            from { transform: scale(0.6); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* 第七幕：禮物 */
+        .gift-box {
+            font-size: 4rem;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .gift-box:active {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* 紙條抽籤 */
+        .paper-note {
+            background: #fffbf0;
+            border: 1px solid #f0e3c4;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #6b5c43;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        /* 頁尾 */
+        .footer-text {
+            position: absolute;
+            bottom: 12px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.68rem;
+            color: var(--text-light);
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+
+        .nav-bottom {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: auto;
+            padding-top: 16px;
+        }
+
+        .btn-subtle {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 漂浮裝飾 background -->
+    <div class="bg-decorations" id="bgDecor"></div>
+
+    <div class="app-container">
+
+        <!-- 【第一幕：神秘邀請函】 -->
+        <div class="scene active" id="scene1">
+            <div class="en-title">To You, Secretly.</div>
+            <div class="sub-title">A PRIVATE SPACE FOR YOU</div>
+
+            <div class="envelope-wrapper" onclick="openEnvelope()">
+                <div class="envelope">
+                    <div class="envelope-ribbon"></div>
+                    <div class="envelope-text-en">To someone who makes my days a little better ♡</div>
+                    <div class="envelope-text-cn">給那個讓我的日子變得不太一樣的人。</div>
+                </div>
+            </div>
+
+            <button class="btn-romantic" id="envBtn" onclick="openEnvelope()">拆開這封信 ♡</button>
+            <div id="envMsg" style="display:none; margin-top:15px; font-size:0.85rem; color:var(--rose-deep);">恭喜你，發現了一個只為你準備的小秘密。</div>
+            <button class="btn-romantic" id="next1" style="display:none;" onclick="goToScene(2)">繼續探索 →</button>
+        </div>
+
+        <!-- 【第二幕：密碼解鎖】 -->
+        <div class="scene" id="scene2">
+            <div class="en-title">A LITTLE SECRET ♡</div>
+            <div class="sub-title">想知道這裡藏著什麼嗎？先輸入密碼吧。</div>
+
+            <div class="pass-input-box">
+                <input type="pattern" maxlength="1" class="pass-digit" oninput="focusNext(this, 1)" id="p1">
+                <input type="pattern" maxlength="1" class="pass-digit" oninput="focusNext(this, 2)" id="p2">
+                <input type="pattern" maxlength="1" class="pass-digit" oninput="focusNext(this, 3)" id="p3">
+                <input type="pattern" maxlength="1" class="pass-digit" oninput="focusNext(this, 4)" id="p4">
+            </div>
+
+            <div class="error-msg" id="passError"></div>
+            <button class="btn-romantic" onclick="checkPassword()">解鎖秘密 ♡</button>
+
+            <div class="security-notice">
+                提示：密碼是 1105。<br>
+                （貼心提醒：僅透過前端 JavaScript 設置的密碼鎖，無法完全保護隱私資料。若要確保內容完全保密，需使用伺服器端驗證機制。）
+            </div>
+        </div>
+
+        <!-- 【第三幕：About You】 -->
+        <div class="scene" id="scene3">
+            <div class="en-title">ABOUT YOU ♡</div>
+            <div class="sub-title">A LITTLE THING I WANT YOU TO KNOW</div>
+
+            <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:12px; overflow-y:auto; max-height: 60vh;">
+                <!-- 卡片 1 -->
+                <div class="polaroid-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-tag">A Little Note</div>
+                            <div class="card-body">其實你可能不知道，有些很普通的聊天，對另一個人來說，卻是一天裡很開心的事情。</div>
+                            <div class="card-hint">點擊翻面 ↺</div>
+                        </div>
+                        <div class="card-back">
+                            🤍 謝謝你陪我聊天的那些時間。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 卡片 2 -->
+                <div class="polaroid-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-tag">Little Things</div>
+                            <div class="card-body">比起什麼特別的承諾，我好像更喜歡那些很平常的小事。<br><br>例如突然收到你的訊息、聽你說今天發生的事，或是明明沒什麼特別的話題，卻還是可以聊很久。</div>
+                            <div class="card-hint">點擊翻面 ↺</div>
+                        </div>
+                        <div class="card-back">
+                            🤍 這些小事，我都悄悄記在了心裡。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 卡片 3 -->
+                <div class="polaroid-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-tag">A Little Secret</div>
+                            <div class="card-body">好像從某一天開始，你就慢慢變成了一個有點特別的人。<br><br>但這件事，我暫時還不打算親口告訴你。🤍</div>
+                            <div class="card-hint">點擊翻面 ↺</div>
+                        </div>
+                        <div class="card-back">
+                            🤍 就讓這個秘密保留在網站裡吧。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bottom">
+                <button class="btn-subtle" onclick="goToScene(2)">← 上一步</button>
+                <button class="btn-romantic" onclick="goToScene(4)" style="margin:0; padding:10px 20px;">下一步 →</button>
+            </div>
+        </div>
+
+        <!-- 【第四幕：Our Little Moments】 -->
+        <div class="scene" id="scene4">
+            <div class="en-title">OUR LITTLE MOMENTS</div>
+            <div class="sub-title">SOME WORDS I WANT TO KEEP</div>
+
+            <div class="diary-container">
+                <div class="diary-date">2026.09.15</div>
+
+                <!-- 第一頁 -->
+                <div class="diary-page active" id="dp1">
+                    <div style="font-family:'Playfair Display'; color:var(--rose-deep); margin-bottom:10px; font-weight:600;">A Little Memory</div>
+                    <div class="diary-text">有些關係不需要急著定義。
+
+能夠慢慢認識你、和你聊天，對我來說就已經是一件很幸福的事。</div>
+                </div>
+
+                <!-- 第二頁 -->
+                <div class="diary-page" id="dp2">
+                    <div style="font-family:'Playfair Display'; color:var(--rose-deep); margin-bottom:10px; font-weight:600;">A Letter For You</div>
+                    <div class="diary-text" style="font-size:0.8rem; line-height:1.7;">學長，其實我知道，你心情不好的時候，總是不太會直接說出來。
+
+可是，如果你真的很難過、很生氣，或是遇到什麼不開心的事情，都可以直接跟我說。
+
+因為看到你心情不好，明明知道你可能正在難受，卻不知道該怎麼幫你，我也會跟著不好受。
+
+就像那首歌唱的，看到你笑，我好像就很滿足了；可是看見你皺眉頭，我也會忍不住跟著難受。
+
+所以啊，以後不管發生什麼事，你都可以試著跟我說說看。不用每次都自己消化，也不用覺得什麼事情都只能自己承受。
+
+我不一定每次都能幫你解決問題，但至少，我願意聽你說，也願意陪你慢慢整理那些不開心的情緒。
+
+我只是希望，當你真的很累、很煩，或是不知道該跟誰說的時候，你也能想到我。
+
+不用每次都表現得很好，也不用什麼事情都自己扛著。
+
+學長，我希望你開心的時候有人陪你笑，難過的時候，也有人願意好好聽你說。
+
+如果你願意，我也想成為那個人。🤍</div>
+                </div>
+
+                <!-- 第三頁 -->
+                <div class="diary-page" id="dp3">
+                    <div style="font-family:'Playfair Display'; color:var(--rose-deep); margin-bottom:10px; font-weight:600;">A SONG I THINK OF ♡</div>
+                    <div style="text-align:center; padding:15px; background:linear-gradient(135deg, #fce4ec, #f8bbd0); border-radius:12px; margin-bottom:12px;">
+                        <div style="font-size:1.1rem; color:var(--rose-deep); font-weight:600;">《好不好》</div>
+                        <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">🌙 ✨ 溫柔粉色夜空</div>
+                    </div>
+                    <div class="diary-text" style="font-size:0.82rem;">有些歌不知道為什麼，聽著聽著就會想到某個人。
+
+而這首歌，剛好讓我想到你。
+
+希望有一天，你聽到它的時候，也會想起這個小小的網站。🤍</div>
+                </div>
+
+                <div class="diary-nav">
+                    <button class="diary-btn" onclick="changePage(-1)">‹ 上一頁</button>
+                    <span id="pageNum" style="font-size:0.75rem; color:var(--text-light);">1 / 3</span>
+                    <button class="diary-btn" onclick="changePage(1)">下一頁 ›</button>
+                </div>
+            </div>
+
+            <div class="nav-bottom">
+                <button class="btn-subtle" onclick="goToScene(3)">← 上一步</button>
+                <button class="btn-romantic" onclick="goToScene(5)" style="margin:0; padding:10px 20px;">下一步 →</button>
+            </div>
+        </div>
+
+        <!-- 【第五幕：秘密選擇題】 -->
+        <div class="scene" id="scene5">
+            <div class="en-title">A LITTLE GAME ♡</div>
+            <div class="sub-title">LET’S SEE WHAT YOU THINK</div>
+
+            <div style="width:100%;">
+                <div id="q1Block">
+                    <div style="font-size:0.9rem; margin-bottom:12px; color:var(--rose-deep); font-weight:500;">【第一題】如果有一天我突然不找你聊天了，你會？</div>
+                    <div class="quiz-option" onclick="answerQ(1, 'A')">A. 主動來找我</div>
+                    <div class="quiz-option" onclick="answerQ(1, 'B')">B. 等我自己回來</div>
+                    <div class="quiz-option" onclick="answerQ(1, 'C')">C. 假裝不在意，其實有點在意</div>
+                    <div class="quiz-reply" id="reply1"></div>
+                </div>
+
+                <div id="q2Block" style="display:none; margin-top:20px;">
+                    <div style="font-size:0.9rem; margin-bottom:12px; color:var(--rose-deep); font-weight:500;">【第二題】你覺得自己對我來說是什麼？</div>
+                    <div class="quiz-option" onclick="answerQ(2, 'A')">A. 普通朋友</div>
+                    <div class="quiz-option" onclick="answerQ(2, 'B')">B. 很聊得來的人</div>
+                    <div class="quiz-option" onclick="answerQ(2, 'C')">C. 有一點點特別的人</div>
+                    <div class="quiz-reply" id="reply2"></div>
+                </div>
+            </div>
+
+            <div class="nav-bottom">
+                <button class="btn-subtle" onclick="goToScene(4)">← 上一步</button>
+                <button class="btn-romantic" id="toScene6Btn" style="display:none; margin:0; padding:10px 20px;" onclick="goToScene(6)">下一步 →</button>
+            </div>
+        </div>
+
+        <!-- 【第六幕：隱藏彩蛋】 -->
+        <div class="scene" id="scene6">
+            <div class="en-title">CAN YOU FIND IT? ♡</div>
+            <div class="sub-title">這裡藏著一個小小的小祕密...</div>
+
+            <div class="easter-egg-area">
+                <div style="color:var(--text-light); font-size:0.8rem;">點擊畫面周圍找找看... 🌸</div>
+                <div class="hidden-heart" onclick="revealEgg()">♡</div>
+
+                <div class="egg-card" id="eggCard">
+                    <div style="font-size:1.1rem; color:var(--rose-deep); font-weight:600; margin-bottom:8px;">你找到啦！♡</div>
+                    <div style="font-size:0.82rem; line-height:1.6; color:var(--text-main);">其實這個網站裡，還有很多小小的心意。<br>只是有些話，我暫時還不好意思親口告訴你。<br><br>謝謝你願意花時間看到這裡。🤍</div>
+                </div>
+            </div>
+
+            <div class="nav-bottom">
+                <button class="btn-subtle" onclick="goToScene(5)">← 上一步</button>
+                <button class="btn-romantic" id="toScene7Btn" style="display:none; margin:0; padding:10px 20px;" onclick="goToScene(7)">前往最後的禮物 →</button>
+            </div>
+        </div>
+
+        <!-- 【第七幕：最後的禮物 & 隨機紙條】 -->
+        <div class="scene" id="scene7">
+            <div class="en-title">ONE LAST SURPRISE ♡</div>
+            <div class="sub-title">最後還有一個小禮物</div>
+
+            <div class="gift-box" id="giftIcon" onclick="openGift()">🎁</div>
+
+            <div id="giftContent" style="display:none; text-align:center; animation:fadeIn 0.8s ease;">
+                <div style="font-size:0.85rem; line-height:1.8; color:var(--text-main); margin-bottom:16px;">
+                    其實，這個網站沒有什麼很厲害的秘密。<br>
+                    只是想讓你知道，有一個人很珍惜跟你聊天的時間，也希望你每天都能過得開心。<br><br>
+                    至於那個人是誰、她到底在想什麼……<br>
+                    就留給你自己慢慢發現吧。♡<br><br>
+                    謝謝你看到最後。<br>
+                    希望下一次見面或聊天的時候，我們也能像現在一樣自然。<br><br>
+                    <strong>晚安，學長。♡</strong>
+                </div>
+
+                <!-- 隨機紙條區域 -->
+                <div style="margin-top:20px; border-top:1px dashed var(--pink-soft); padding-top:16px;">
+                    <div style="font-size:0.8rem; color:var(--rose-deep); font-weight:600;">A LITTLE MESSAGE FOR YOU ♡</div>
+                    <button class="btn-romantic" style="padding:8px 18px; font-size:0.8rem; margin-top:8px;" onclick="drawNote()">抽一張小紙條 💌</button>
+                    <div class="paper-note" id="noteDisplay" style="display:none;"></div>
+                </div>
+
+                <button class="btn-romantic" style="margin-top:24px; background:linear-gradient(135deg, var(--gold-champagne), var(--pink-accent));" onclick="goToScene(1)">再看一次這份小秘密 ↺</button>
+            </div>
+
+            <div class="nav-bottom" style="margin-top:auto;">
+                <button class="btn-subtle" onclick="goToScene(6)">← 上一步</button>
+            </div>
+        </div>
+
+        <!-- 頁尾 -->
+        <div class="footer-text">
+            MADE WITH LOVE, JUST FOR YOU ♡<br>
+            <span style="font-size:0.6rem; opacity:0.8;">一個藏著小秘密的地方，送給一個有點特別的人。</span>
+        </div>
+
+    </div>
+
+    <script>
+        // 背景飄浮元件
+        function createDecorations() {
+            const container = id('bgDecor');
+            const items = ['🌸', '✨', '🤍', '🌙', '☁️'];
+            for(let i=0; i<15; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-element';
+                el.innerText = items[Math.floor(Math.random() * items.length)];
+                el.style.left = Math.random() * 100 + '%';
+                el.style.top = Math.random() * 100 + '%';
+                el.style.animationDelay = Math.random() * 5 + 's';
+                el.style.fontSize = (Math.random() * 12 + 12) + 'px';
+                container.appendChild(el);
+            }
+        }
+
+        function id(e) { return document.getElementById(e); }
+
+        // 場景切換
+        function goToScene(sceneNum) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            id('scene' + sceneNum).classList.add('active');
+        }
+
+        // 第一幕拆信
+        function openEnvelope() {
+            id('envBtn').style.display = 'none';
+            id('envMsg').style.display = 'block';
+            id('next1').style.display = 'inline-flex';
+        }
+
+        // 第二幕密碼處理
+        function focusNext(elem, index) {
+            if (elem.value.length === 1 && index < 4) {
+                id('p' + (index + 1)).focus();
+            }
+        }
+
+        function checkPassword() {
+            const pass = id('p1').value + id('p2').value + id('p3').value + id('p4').value;
+            if(pass === '1105') {
+                id('passError').innerText = '';
+                goToScene(3);
+            } else {
+                id('passError').innerText = '密碼不對喔，再試一次吧 ♡';
+            }
+        }
+
+        // 第三幕卡片翻面
+        function flipCard(card) {
+            card.classList.toggle('flipped');
+        }
+
+        // 第四幕日記翻頁
+        let currentPage = 1;
+        function changePage(dir) {
+            currentPage += dir;
+            if(currentPage < 1) currentPage = 1;
+            if(currentPage > 3) currentPage = 3;
+
+            document.querySelectorAll('.diary-page').forEach(p => p.classList.remove('active'));
+            id('dp' + currentPage).classList.add('active');
+            id('pageNum').innerText = currentPage + ' / 3';
+        }
+
+        // 第五幕選擇題
+        function answerQ(qNum, option) {
+            if(qNum === 1) {
+                const reply = id('reply1');
+                reply.style.display = 'block';
+                if(option === 'A') reply.innerText = "真的假的？那我是不是可以偷偷期待一下了？😳";
+                if(option === 'B') reply.innerText = "原來你這麼有耐心呀，那我可要好好想想了。♡";
+                if(option === 'C') reply.innerText = "被我發現了喔？原來你也有藏起來的小心思。🤍";
+                
+                setTimeout(() => {
+                    id('q2Block').style.display = 'block';
+                }, 600);
+            } else if(qNum === 2) {
+                const reply = id('reply2');
+                reply.style.display = 'block';
+                if(option === 'A') reply.innerText = "好吧，那我就繼續努力讓你更認識我一點。♡";
+                if(option === 'B') reply.innerText = "能聊得來其實也是一件很難得的事呀。";
+                if(option === 'C') reply.innerHTML = "叮！恭喜你，解鎖隱藏訊息 ♡<br><br><span style='color:var(--text-main); font-size:0.8rem;'>其實，你好像比自己想像中還要特別一點。</span>";
+
+                id('toScene6Btn').style.display = 'inline-flex';
+            }
+        }
+
+        // 第六幕彩蛋
+        function revealEgg() {
+            id('eggCard').style.display = 'block';
+            id('toScene7Btn').style.display = 'inline-flex';
+        }
+
+        // 第七幕禮物盒
+        function openGift() {
+            id('giftIcon').style.display = 'none';
+            id('giftContent').style.display = 'block';
+        }
+
+        // 隨機紙條
+        const notes = [
+            "今天也要好好照顧自己喔。",
+            "希望你今天遇到的事情，都能有個好結果。",
+            "如果今天有點累，就休息一下吧。",
+            "有人希望你每天都能開開心心的。♡",
+            "不開心的時候，也不用什麼都自己承受。",
+            "希望你每天都有一個可以讓自己笑出來的瞬間。",
+            "希望未來的某一天，我們還能像現在一樣自然地聊天。",
+            "你不用每一天都很堅強，偶爾放鬆一下也沒關係。",
+            "希望你遇到煩心事的時候，也能記得有人願意聽你說。",
+            "今天的你，也值得被好好對待。🤍"
+        ];
+
+        function drawNote() {
+            const display = id('noteDisplay');
+            const random = notes[Math.floor(Math.random() * notes.length)];
+            display.style.display = 'flex';
+            display.innerText = random;
+        }
+
+        window.onload = createDecorations;
+    </script>
+</body>
+</html>
